@@ -24,17 +24,17 @@ int FallPin=5;
 
 void setup()
 {
-//  Serial.begin(115200);
+  Serial.begin(115200);
 
   Wire.begin();
 
-//  if (!imu.begin(AFS_2G, GFS_250DPS)) {
-//    Serial.println("MPU6050 is online...");
-//  }
-//  else {
-//    Serial.println("Failed to init MPU6050");
-//    while (true);
-//  }
+  if (!imu.begin(AFS_2G, GFS_250DPS)) {
+    Serial.println("MPU6050 is online...");
+  }
+  else {
+    Serial.println("Failed to init MPU6050");
+    while (true);
+  }
 
   pinMode(FallPin,OUTPUT); //The pin which communicates with the Wi-Fi Arduino
   digitalWrite(FallPin,LOW);
@@ -60,10 +60,10 @@ void loop()
 //    Serial.println(magnitude);
       if(magnitude > 15000){
         digitalWrite(FallPin,HIGH); //If the acceleration is too big, it will tell the Wi-Fi
-//        Serial.println(1); //Only use for debugging
+        Serial.println(1); //Only use for debugging
         delay(1000);  //Arduino that the person fell and that device will do its job.
       }
       digitalWrite(FallPin,LOW);
-//      Serial.println(0);
+      Serial.println(0);
   }
 }

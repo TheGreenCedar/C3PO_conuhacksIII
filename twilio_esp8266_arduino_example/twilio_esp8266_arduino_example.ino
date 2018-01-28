@@ -30,12 +30,12 @@ const char* auth_token = "de38c1ceb50431674570b6b68b24694a";
 
 // Details for the SMS we'll send with Twilio.  Should be a number you own
 // (check the console, link above).
-String to_number    = "+15147551596";
-String from_number  = "+15149005554";
-String message_body    = "Hello your loved one appears to have fallen. Please contact them and reply 'OK' if they are safe or 'EMERGENCY' if they are in danger or cannot be reached.";
+String to_number = "+15147551596";
+String from_number = "+15149005554";
+String message_body = "Hello your loved one appears to have fallen. Please contact them and reply 'OK' if they are safe or 'EMERGENCY' if they are in danger or cannot be reached.";
 
 // The 'authorized number' to text the ESP8266 for our example
-String master_number    = "+15149696840";
+String master_number = "+15149696840";
 
 // Optional - a url to an image.  See 'MediaUrl' here:
 // https://www.twilio.com/docs/api/rest/sending-messages
@@ -46,15 +46,15 @@ Twilio *twilio;
 ESP8266WebServer twilio_server(8000);
 
 void sendMessage() {
-  String response;
-  bool success = twilio->send_message(
-                   to_number,
-                   from_number,
-                   message_body,
-                   response,
-                   media_url
-                 );
-                   Serial.println(response);
+	String response;
+	bool success = twilio->send_message(
+		to_number,
+		from_number,
+		message_body,
+		response,
+		media_url
+	);
+//	Serial.println(response);
 }
 /*
    Callback function when we hit the /message route with a webhook.
@@ -62,71 +62,72 @@ void sendMessage() {
 */
 void handle_message() {
 #if USE_SOFTWARE_SERIAL == 0
-  Serial.println("Incoming connection!  Printing body:");
+//	Serial.println("Incoming connection!  Printing body:");
 #endif
-  bool authorized = false;
-  char command = '\0';
+	bool authorized = false;
+	char command = '\0';
 
-  // Parse Twilio's request to the ESP
-  for (int i = 0; i < twilio_server.args(); ++i) {
+	// Parse Twilio's request to the ESP
+	for (int i = 0; i < twilio_server.args(); ++i) {
 #if USE_SOFTWARE_SERIAL == 0
-    Serial.print(twilio_server.argName(i));
-    Serial.print(": ");
-    Serial.println(twilio_server.arg(i));
+//		Serial.print(twilio_server.argName(i));
+//		Serial.print(": ");
+//		Serial.println(twilio_server.arg(i));
 #endif
 
-    if (twilio_server.argName(i) == "From" and
-        twilio_server.arg(i) == master_number) {
-      authorized = true;
-    } else if (twilio_server.argName(i) == "Body") {
-      if (twilio_server.arg(i) == "?" or
-          twilio_server.arg(i) == "0" or
-          twilio_server.arg(i) == "1") {
-        command = twilio_server.arg(i)[0];
-      }
-    }
-  } // end for loop parsing Twilio's request
+		if (twilio_server.argName(i) == "From" && twilio_server.arg(i) == master_number) {
+			authorized = true;
+		}
+		else if (twilio_server.argName(i) == "Body") {
+			if (twilio_server.arg(i) == "?" ||
+				twilio_server.arg(i) == "0" ||
+				twilio_server.arg(i) == "1") {
+				command = twilio_server.arg(i)[0];
+			}
+		}
+	} // end for loop parsing Twilio's request
 
-  // Logic to handle the incoming SMS
-  String response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-  if (command != '\0') {
-    if (authorized) {
-      switch (command) {
-        case '0':
-          digitalWrite(LED_BUILTIN, LOW);
-          response += "<Response><Message>"
-                      "Turning light off!"
-                      "</Message></Response>";
-          break;
-        case '1':
-          digitalWrite(LED_BUILTIN, HIGH);
-          response += "<Response><Message>"
-                      "Turning light on!"
-                      "</Message></Response>";
-          break;
-        case '?':
-        default:
-          response += "<Response><Message>"
-                      "0 - Light off, 1 - Light On, "
-                      "? - Help\n"
-                      "The light is currently: ";
-          response += digitalRead(LED_BUILTIN);
-          response += "</Message></Response>";
-          break;
-      }
-    } else {
-      response += "<Response><Message>"
-                  "Unauthorized!"
-                  "</Message></Response>";
-    }
+	// Logic to handle the incoming SMS
+	String response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+	if (command != '\0') {
+		if (authorized) {
+			switch (command) {
+			case '0':
+				digitalWrite(LED_BUILTIN, LOW);
+				response += "<Response><Message>"
+					"Turning light off!"
+					"</Message></Response>";
+				break;
+			case '1':
+				digitalWrite(LED_BUILTIN, HIGH);
+				response += "<Response><Message>"
+					"Turning light on!"
+					"</Message></Response>";
+				break;
+			case '?':
+			default:
+				response += "<Response><Message>"
+					"0 - Light off, 1 - Light On, "
+					"? - Help\n"
+					"The light is currently: ";
+				response += digitalRead(LED_BUILTIN);
+				response += "</Message></Response>";
+				break;
+			}
+		}
+		else {
+			response += "<Response><Message>"
+				"Unauthorized!"
+				"</Message></Response>";
+		}
+	}
+	else {
+		response += "<Response><Message>"
+			"Look: a SMS response from an ESP8266!"
+			"</Message></Response>";
+	}
 
-  } else {
-    response += "<Response><Message>"
-                "Look: a SMS response from an ESP8266!"
-                "</Message></Response>";
-  }
-
-  twilio_server.send(200, "application/xml", response);
+	twilio_server.send(200, "application/xml", response);
 }
 
 /*
@@ -136,45 +137,47 @@ void handle_message() {
    object, optionally set up software serial, then send a SMS or MMS message.
 */
 void setup() {
-  Serial.begin(115200);
+//	Serial.begin(115200);
 
-  pinMode(InputPin, INPUT);
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, LOW);
+	pinMode(InputPin, INPUT);
+	pinMode(LED_BUILTIN, OUTPUT);
+	digitalWrite(LED_BUILTIN, LOW);
 
-  WiFi.begin(ssid, password);
-  twilio = new Twilio(account_sid, auth_token, fingerprint);
+	WiFi.begin(ssid, password);
+	twilio = new Twilio(account_sid, auth_token, fingerprint);
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.println("Connected to WiFi, IP address: ");
-  Serial.println(WiFi.localIP());
-  while (WiFi.status() != WL_CONNECTED) delay(1000);
-//  sendMessage();
-  // Set up a route to /message which will be the webhook url
-  twilio_server.on("/message", handle_message);
-  twilio_server.begin();
+	while (WiFi.status() != WL_CONNECTED) {
+		delay(1000);
+//		Serial.print(".");
+	}
+//	Serial.println("");
+//	Serial.println("Connected to WiFi, IP address: ");
+//	Serial.println(WiFi.localIP());
+
+digitalWrite(LED_BUILTIN, HIGH);
+delay(1000);
+digitalWrite(LED_BUILTIN, LOW);
+delay(500);
+
+	//  sendMessage();
+	  // Set up a route to /message which will be the webhook url
+	twilio_server.on("/message", handle_message);
+	twilio_server.begin();
 
 #if USE_SOFTWARE_SERIAL == 0
 
 #endif
 }
 
-
 /*
-    In our main loop, we listen for connections from Twilio in handleClient().
+	In our main loop, we listen for connections from Twilio in handleClient().
 */
 void loop() {
-  twilio_server.handleClient();
-  if (digitalRead(InputPin) == HIGH) {
-    digitalWrite(LED_BUILTIN, HIGH);
-    sendMessage();
-    Serial.println(1);
-  }
-  digitalWrite(LED_BUILTIN, LOW);
+	twilio_server.handleClient();
+	if (digitalRead(InputPin) == HIGH) {
+		digitalWrite(LED_BUILTIN, HIGH);
+		sendMessage();
+//		Serial.println(1);
+	}
+	digitalWrite(LED_BUILTIN, LOW);
 }
-
-
