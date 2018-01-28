@@ -19,9 +19,6 @@
 #include <math.h>
 
 MPU6050 imu;
-int16_t average = 0;
-int16_t total = 0;
-int16_t count = 0;
 
 int FallPin=5;
 
@@ -48,26 +45,20 @@ void loop()
 {
   int16_t ax, ay, az, gx, gy, gz;
   if (imu.getMotion6Counts(&ax, &ay, &az, &gx, &gy, &gz)) {
-    //        Serial.print(ax);
-    //        Serial.print(" ");
-    //        Serial.print(ay);
-    //        Serial.print(" ");
-    //        Serial.print(az);
-    //        Serial.print(" ");
-    //        Serial.print(gx);
-    //        Serial.print(" ");
-    //        Serial.print(gy);
-    //        Serial.print(" ");
-    //        Serial.print(gz);
-    int16_t magnitude = sqrt(pow(ax, 2) + pow(ay, 2) + pow(az, 2)) - 16700;
-    //  Serial.println();
-//    if (magnitude < 0)
-//      magnitude = 0;
-//    if (magnitude > 10000){
-//      
-//      Serial.println(magnitude);
-//      }
-      if(magnitude > 20000){
+//            Serial.print(ax);
+//            Serial.print(" ");
+//            Serial.print(ay);
+//            Serial.print(" ");
+//            Serial.print(az);
+//            Serial.print(" ");
+//            Serial.print(gx);
+//            Serial.print(" ");
+//            Serial.print(gy);
+//            Serial.print(" ");
+//            Serial.print(gz);
+    int16_t magnitude = abs(sqrt(pow(az, 2))-16300);
+//    Serial.println(magnitude);
+      if(magnitude > 15000){
         digitalWrite(FallPin,HIGH); //If the acceleration is too big, it will tell the Wi-Fi
 //        Serial.println(1); //Only use for debugging
         delay(1000);  //Arduino that the person fell and that device will do its job.
