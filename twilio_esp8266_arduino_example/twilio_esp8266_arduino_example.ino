@@ -6,6 +6,7 @@
 #include <ESP8266WebServer.h>
 #include "twilio.hpp"
 
+int InputPin = D6;
 // Use software serial for debugging?
 #define USE_SOFTWARE_SERIAL 0
 
@@ -29,9 +30,9 @@ const char* auth_token = "de38c1ceb50431674570b6b68b24694a";
 
 // Details for the SMS we'll send with Twilio.  Should be a number you own
 // (check the console, link above).
-String to_number    = "+15149696840";
+String to_number    = "+15147551596";
 String from_number  = "+15149005554";
-String message_body    = "Hello from Twilio and the ESP8266!";
+String message_body    = "Hello your loved one appears to have fallen. Please contact them and reply 'OK' if they are safe or 'EMERGENCY' if they are in danger or cannot be reached.";
 
 // The 'authorized number' to text the ESP8266 for our example
 String master_number    = "+15149696840";
@@ -44,6 +45,17 @@ String media_url = "";
 Twilio *twilio;
 ESP8266WebServer twilio_server(8000);
 
+void sendMessage() {
+  String response;
+  bool success = twilio->send_message(
+                   to_number,
+                   from_number,
+                   message_body,
+                   response,
+                   media_url
+                 );
+                   Serial.println(response);
+}
 /*
    Callback function when we hit the /message route with a webhook.
    Use the global 'twilio_server' object to respond.
@@ -125,11 +137,14 @@ void handle_message() {
 */
 void setup() {
   Serial.begin(115200);
+
+  pinMode(InputPin, INPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
+
   WiFi.begin(ssid, password);
   twilio = new Twilio(account_sid, auth_token, fingerprint);
 
-#if USE_SOFTWARE_SERIAL == 0
- // Serial.begin(115200);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.print(".");
@@ -137,30 +152,14 @@ void setup() {
   Serial.println("");
   Serial.println("Connected to WiFi, IP address: ");
   Serial.println(WiFi.localIP());
-#else
   while (WiFi.status() != WL_CONNECTED) delay(1000);
-#endif
-
-  // Response will be filled with connection info and Twilio API responses
-  // from this initial SMS send.
-  String response;
-  bool success = twilio->send_message(
-                   to_number,
-                   from_number,
-                   message_body,
-                   response,
-                   media_url
-                 );
-
+//  sendMessage();
   // Set up a route to /message which will be the webhook url
   twilio_server.on("/message", handle_message);
   twilio_server.begin();
 
-  // Use LED_BUILTIN to find the LED pin and set the GPIO to output
-  pinMode(LED_BUILTIN, OUTPUT);
-
 #if USE_SOFTWARE_SERIAL == 0
-  Serial.println(response);
+
 #endif
 }
 
@@ -170,4 +169,12 @@ void setup() {
 */
 void loop() {
   twilio_server.handleClient();
+  if (digitalRead(InputPin) == HIGH) {
+    digitalWrite(LED_BUILTIN, HIGH);
+    sendMessage();
+    Serial.println(1);
+  }
+  digitalWrite(LED_BUILTIN, LOW);
 }
+
+
